@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool isLoading = false;
   String error = '';
+  bool isPasswordVisible = false;
 
   void handleLogin() async {
     setState(() {
@@ -66,12 +67,11 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  height: 48,
-                  width: 160,
-                  color: Colors.grey[300],
-                  alignment: Alignment.center,
-                  child: const Text("160 × 48"),
+                Image.asset(
+                  'assets/images/Logocompany.png',
+                  height: 100,
+                  width: 230,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 32),
                 Text(
@@ -123,12 +123,23 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: !isPasswordVisible,
                   decoration: InputDecoration(
                     hintText: 'Masukkan password',
                     filled: true,
                     fillColor: Colors.grey[100],
-                    suffixIcon: const Icon(Icons.visibility_off),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isPasswordVisible = !isPasswordVisible;
+                        });
+                      },
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -173,7 +184,11 @@ class _LoginPageState extends State<LoginPage> {
                             )
                             : Text(
                               "Login",
-                              style: GoogleFonts.poppins(fontSize: 16),
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                   ),
                 ),
