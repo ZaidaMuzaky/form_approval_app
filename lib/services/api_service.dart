@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'auth_service.dart';
 
 class ApiService {
   static const String baseUrl = 'http://192.168.10.112:8000/api';
@@ -13,18 +14,19 @@ class ApiService {
     try {
       final response = await http.post(
         url,
-        headers: {
-          'Accept': 'application/json',
-          // jika kamu ingin kirim JSON:
-          // 'Content-Type': 'application/json',
-        },
-        // jika pakai JSON:
-        // body: jsonEncode({'username': username, 'password': password}),
+        headers: {'Accept': 'application/json'},
         body: {'username': username, 'password': password},
       );
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['token'] != null) {
+        // Simpan username dan tipe pengguna ke AuthService
+        AuthService.loginAs(
+          data['user']['role'] == 'admin'
+              ? UserType.admin
+              : UserType.user, // Atur tipe pengguna
+          username: data['user']['username'], // Ambil username dari respons
+        );
         return {'success': true, 'token': data['token'], 'user': data['user']};
       } else {
         return {'success': false, 'message': data['message'] ?? 'Login gagal'};
