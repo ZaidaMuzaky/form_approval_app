@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../pages/home_page.dart';
 import '../pages/form_page.dart';
 import '../pages/status_page.dart';
 import '../pages/approval_section.dart';
 import '../pages/image_editor_page.dart';
+import 'package:form_approval_app/login_page.dart';
+import 'package:form_approval_app/pages/status_all_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -20,7 +21,9 @@ class AppDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(color: Colors.indigo),
+            decoration: const BoxDecoration(
+              color: Color.fromARGB(255, 48, 48, 48),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -45,17 +48,22 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Beranda'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HomePage()),
-              );
-            },
-          ),
+          if (isAdmin) ...[
+            // Hanya tampilkan untuk Admin
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: const Text('Status Semua Form'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const StatusAllPage(),
+                  ), // Pass parameter isAdmin
+                );
+              },
+            ),
+          ],
           if (!isAdmin) ...[
             ListTile(
               leading: const Icon(Icons.edit),
@@ -118,9 +126,9 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context) {
+  void _showLogoutConfirmation(BuildContext parentContext) {
     showDialog(
-      context: context,
+      context: parentContext,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Konfirmasi Logout'),
@@ -133,13 +141,17 @@ class AppDrawer extends StatelessWidget {
               child: const Text('Batal'),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Tutup dialog
-                AuthService.loginAs(UserType.user); // Reset user login
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/login',
-                ); // Navigasi ke halaman login
+              onPressed: () async {
+                await AuthService.logout(); // Hapus session/login data
+                if (parentContext.mounted) {
+                  Navigator.of(context).pop(); // Tutup dialog
+
+                  // Navigasi ke LoginPage dan hapus semua halaman sebelumnya
+                  Navigator.of(parentContext).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (Route<dynamic> route) => false,
+                  );
+                }
               },
               child: const Text('Logout'),
             ),

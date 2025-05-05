@@ -19,15 +19,15 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
+
       if (response.statusCode == 200 && data['token'] != null) {
-        // Simpan username dan tipe pengguna ke AuthService
+        final user = data['user'];
         AuthService.loginAs(
-          data['user']['role'] == 'admin'
-              ? UserType.admin
-              : UserType.user, // Atur tipe pengguna
-          username: data['user']['username'], // Ambil username dari respons
+          user['role'] == 'admin' ? UserType.admin : UserType.user,
+          username: user['username'],
         );
-        return {'success': true, 'token': data['token'], 'user': data['user']};
+
+        return {'success': true, 'token': data['token'], 'user': user};
       } else {
         return {'success': false, 'message': data['message'] ?? 'Login gagal'};
       }

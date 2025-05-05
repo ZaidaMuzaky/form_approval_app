@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:form_approval_app/services/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,22 +25,48 @@ class _LoginPageState extends State<LoginPage> {
       error = '';
     });
 
-    final response = await ApiService.login(
-      usernameController.text,
-      passwordController.text,
-    );
+    try {
+      final response = await ApiService.login(
+        usernameController.text.trim(),
+        passwordController.text.trim(),
+      );
 
-    setState(() {
-      isLoading = false;
-    });
-
-    if (response['success']) {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } else {
       setState(() {
-        error = response['message'] ?? 'Login gagal';
+        isLoading = false;
+      });
+
+      if (response['success'] == true) {
+        if (mounted) {
+          final authProvider = Provider.of<AuthProvider>(
+            context,
+            listen: false,
+          );
+
+          // Ambil role dari response Laravel, biasanya dari field "type"
+          final role =
+              (response['role'] ?? response['type'] ?? 'user')
+                  .toString()
+                  .toLowerCase();
+
+          // Simpan ke Provider
+          authProvider.login(role);
+
+          // Jika admin, arahkan ke status all, jika user ke status biasa
+          if (role == 'admin') {
+            Navigator.pushReplacementNamed(context, '/statusAll');
+          } else {
+            Navigator.pushReplacementNamed(context, '/status');
+          }
+        }
+      } else {
+        setState(() {
+          error = response['message'] ?? 'Login gagal';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        error = 'Terjadi kesalahan: ${e.toString()}';
       });
     }
   }
